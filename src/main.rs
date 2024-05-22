@@ -1,5 +1,8 @@
 use actix_web::{middleware::Logger, App, HttpServer};
 use env_logger::Env;
+use index::index_config;
+
+mod index;
 
 #[actix_web::main]
 async fn main()-> std::io::Result<()> {
@@ -8,6 +11,7 @@ async fn main()-> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .wrap(Logger::default())
+            .configure(index_config)
     })
     .bind(("localhost", 8123))?
     .run()
