@@ -3,6 +3,9 @@ use env_logger::Env;
 use index::index_config;
 
 mod index;
+mod common;
+mod s3;
+mod errors;
 
 #[actix_web::main]
 async fn main()-> std::io::Result<()> {
