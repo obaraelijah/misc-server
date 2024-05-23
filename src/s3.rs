@@ -5,6 +5,7 @@ use actix_web::{
 };
 use aws_sdk_s3::Client;
 use base64::{engine::general_purpose::STANDARD_NO_PAD, Engine as _};
+use log::debug;
 use serde::{Deserialize, Serialize};
 
 use crate::common::Config;
@@ -49,6 +50,7 @@ async fn list_objects(
 ) -> Result<Json<Vec<ObjectEntry>>> {
     let prefix = path.as_ref().map_or("".to_string(), |p| p.path.clone());
 
+    debug!("Getting objects with prefix: {}", &prefix);
     let res = s3
         .list_objects_v2()
         .bucket(&config.bucket_name)
@@ -88,6 +90,7 @@ async fn get_object(
     config: Data<Config>,
 ) -> Result<Json<S3Object>> {
     // file path
+    debug!("Getting object: {:?}", &file_path);
     let file_path = file_path.ok_or_else(|| ServerError::GetObject {
         message: "No file path".to_string(),
     });
