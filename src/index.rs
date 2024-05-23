@@ -1,5 +1,9 @@
-use actix_web::{get, web::{Data, ServiceConfig}, HttpResponse, Responder};
 use crate::errors::{Result, ServerError};
+use actix_web::{
+    get,
+    web::{Data, ServiceConfig},
+    HttpResponse, Responder,
+};
 
 use aws_sdk_s3::Client as S3Client;
 
