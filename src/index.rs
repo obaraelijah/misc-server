@@ -1,7 +1,7 @@
 use actix_web::{get, web::ServiceConfig, HttpResponse, Responder};
 
 #[derive(serde::Serialize)]
-struct Version  {
+struct Version {
     version: String,
     commit: String,
 }

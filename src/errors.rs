@@ -1,4 +1,7 @@
-use aws_sdk_s3::{error::SdkError, operation::list_objects_v2::ListObjectsV2Error};
+use aws_sdk_s3::{
+    error::SdkError,
+    operation::{get_object::GetObjectError, list_objects_v2::ListObjectsV2Error},
+};
 use serde::Serialize;
 use thiserror::Error;
 
@@ -10,9 +13,17 @@ pub enum ServerError {
     ListObjects { message: String },
 }
 
-impl From<SdkError<ListObjectsV2Error>>  for ServerError {
+impl From<SdkError<ListObjectsV2Error>> for ServerError {
     fn from(e: SdkError<ListObjectsV2Error>) -> Self {
-        ServerError::ListObjects { 
+        ServerError::ListObjects {
+            message: e.to_string(),
+        }
+    }
+}
+
+impl From<SdkError<GetObjectError>> for ServerError {
+    fn from(e: SdkError<GetObjectError>) -> Self {
+        ServerError::GetObject {
             message: e.to_string(),
         }
     }
@@ -26,9 +37,7 @@ impl actix_web::error::ResponseError for ServerError {
             ServerError::ListObjects { .. } => {
                 actix_web::HttpResponse::InternalServerError().json(self)
             }
-            Self::GetObject { .. } => {
-                actix_web::HttpResponse::InternalServerError().json(self)
-            }
+            Self::GetObject { .. } => actix_web::HttpResponse::InternalServerError().json(self),
         }
     }
 }
