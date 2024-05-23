@@ -1,6 +1,7 @@
 use actix_web::{middleware::Logger, App, HttpServer};
 use env_logger::Env;
 use index::index_config;
+use s3::s3_config;
 
 mod index;
 mod common;
@@ -15,6 +16,7 @@ async fn main()-> std::io::Result<()> {
         App::new()
             .wrap(Logger::default())
             .configure(index_config)
+            .configure(s3_config)
     })
     .bind(("localhost", 8123))?
     .run()

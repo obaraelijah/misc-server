@@ -1,6 +1,6 @@
 use actix_web::{
     get,
-    web::{Data, Query},
+    web::{scope, Data, Query, ServiceConfig},
 };
 use aws_sdk_s3::Client;
 use serde::{Deserialize, Serialize};
@@ -34,6 +34,13 @@ struct S3Object {
     blob: String, // base64-encoded content
     name: String,
     mime_type: String,
+}
+
+pub fn s3_config(cfg: &mut ServiceConfig) {
+    cfg.service(
+        scope("/s3")
+            .service(list_objects)
+    );
 }
 
 #[get("/list_objects")]
