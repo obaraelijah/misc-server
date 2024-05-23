@@ -1,9 +1,31 @@
-use actix_web::{get, web::ServiceConfig, HttpResponse, Responder};
+use actix_web::{get, web::{Data, ServiceConfig}, HttpResponse, Responder};
+use crate::errors::{Result, ServerError};
+
+use aws_sdk_s3::Client as S3Client;
 
 #[derive(serde::Serialize)]
 struct Version {
     version: String,
     commit: String,
+}
+
+#[get("/health")]
+async fn health(s3_client: Option<Data<S3Client>>) -> Result<HttpResponse> {
+    let mut issues = vec![];
+
+    if let Some(s3) = s3_client {
+        if let Err(e) = s3.list_buckets().send().await {
+            issues.push(format!("Failed to connect to S3 bucket: {}", e));
+        }
+    } else {
+        issues.push("s3 client is not initialized".to_string());
+    };
+
+    if issues.is_empty() {
+        Ok(HttpResponse::Ok().body("OK"))
+    } else {
+        Err(ServerError::HealthCheck { errors: issues })
+    }
 }
 
 #[get("/version")]
@@ -23,5 +45,5 @@ async fn index() -> impl Responder {
 }
 
 pub fn index_config(cfg: &mut ServiceConfig) {
-    cfg.service(index).service(version);
+    cfg.service(index).service(version).service(health);
 }

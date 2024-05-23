@@ -15,8 +15,8 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .wrap(Logger::default())
-            .configure(index_config)
             .configure(s3_config)
+            .configure(index_config)
     })
     .bind(("localhost", 8123))?
     .run()
