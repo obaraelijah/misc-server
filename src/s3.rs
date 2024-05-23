@@ -92,7 +92,6 @@ async fn get_object(
         message: "No file path".to_string(),
     });
 
-
     let key = &file_path.unwrap().path;
 
     let obj = s3
