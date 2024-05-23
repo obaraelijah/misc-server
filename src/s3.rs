@@ -2,12 +2,14 @@ use actix_web::{
     get,
     web::{scope, Data, Query, ServiceConfig},
 };
-use aws_sdk_s3::Client;
-use serde::{Deserialize, Serialize};
-use crate::errors::Result;
-use crate::common::Config;
 use actix_web::web::Json;
+use aws_sdk_s3::Client;
+use base64::{engine::general_purpose::STANDARD_NO_PAD, Engine as _};
+use serde::{Deserialize, Serialize};
 
+
+use crate::errors::{Result, ServerError};
+use crate::common::Config;
 // deserializing query params from incoming requests
 #[derive(Deserialize, Debug)]
 struct S3Query {
@@ -75,4 +77,48 @@ async fn list_objects(
 
     dirs.extend(objects);
     Ok(Json(dirs))
+}
+
+#[get("/get_object")]
+async fn get_object(
+    file_path: Option<Query<S3Query>>,
+    s3: Data<Client>,
+    config: Data<Config>,
+) -> Result<Json<S3Object>>  {
+    // file path
+    let file_path = file_path.ok_or_else(|| ServerError::GetObject { 
+        message: "No file path".to_string(), 
+    });
+
+    let key = &file_path.unwrap().path;
+    // Retrieve object from s3
+    let obj = s3
+        .get_object()
+        .bucket(&config.bucket_name)
+        .key(key)
+        .send()
+        .await?;
+
+    // collect the objects body into bytes
+    let bytes = obj.body.collect().await.map_err(|e| ServerError::GetObject { 
+        message: e.to_string(), 
+    });
+
+    // encode the bytes to a base64 string
+    let blob = STANDARD_NO_PAD.encode(bytes.to_vec());
+
+    // Extract the file name from the key
+    let name = key.split('/').last().unwrap().to_string();
+
+    // Retrieve the MIME type from the object's metadata
+    let mime_type = obj.content_type.ok_or_else(|| ServerError::GetObject { 
+        message: "No content type".to_string(), 
+    });
+
+    // Extract the s3 object data as JSON
+    Ok(Json(S3Object {
+        blob,
+        name,
+        mime_type,
+    }))
 }
