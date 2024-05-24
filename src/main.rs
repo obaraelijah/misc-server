@@ -1,3 +1,11 @@
+#![allow(clippy::needless_return)]
+mod auth;
+mod common;
+mod errors;
+mod index;
+mod ip;
+mod s3;
+
 use actix_identity::IdentityMiddleware;
 use actix_web::{middleware::Logger, web::Data, App, HttpServer};
 use auth::auth_config;
@@ -7,13 +15,7 @@ use env_logger::Env;
 use index::index_config;
 use ip::update_ip;
 use s3::s3_config;
-
-mod auth;
-mod common;
-mod errors;
-mod index;
-mod ip;
-mod s3;
+use log::{debug, info};
 
 const SECRETS_JSON: &str = include_str!("../secrets.json");
 
@@ -57,11 +59,15 @@ async fn create_s3_client(provider: &Secrets) -> aws_sdk_s3::Client {
 async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(Env::default().default_filter_or("debug"));
 
+    info!("Entering main");
+
     let secrets: Secrets =
         serde_json::from_str(SECRETS_JSON).expect("Failed to parse the secrets json");
+    info!("Got secrets");
 
     let s3_client = create_s3_client(&secrets).await;
 
+    info!("Starting server");
     HttpServer::new(move || {
         App::new()
             .wrap(IdentityMiddleware::default())
