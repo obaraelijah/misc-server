@@ -1,6 +1,6 @@
 use actix_web::{post, web, HttpResponse, Responder};
-use std::borrow::Cow;
 use log::{debug, info};
+use std::borrow::Cow;
 
 use crate::common::Config;
 
@@ -68,7 +68,6 @@ pub async fn update_ip(
         Cow::from(&req.ip),
         Cow::from(&config.nc_api_key),
     );
-
 
     debug!("Params: {:?}", &params);
     // Create request to namecheap to update the IP

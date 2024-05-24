@@ -3,17 +3,28 @@ use actix_web::{
     get,
     web::{scope, Data, Query, ServiceConfig},
 };
+use actix_web_lab::middleware::from_fn;
 use aws_sdk_s3::Client;
 use base64::{engine::general_purpose::STANDARD_NO_PAD, Engine as _};
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-use crate::common::Config;
 use crate::errors::{Result, ServerError};
+use crate::{auth::auth_middleware, common::Config};
 // deserializing query params from incoming requests
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 struct S3Query {
     path: String,
+}
+
+pub fn s3_config(cfg: &mut ServiceConfig) {
+    cfg.service(
+        scope("/s3")
+            .wrap(from_fn(auth_middleware))
+            .service(list_objects)
+            .service(get_object),
+    );
 }
 
 // enum to represent whether an s3 object is a file or a Dir
@@ -36,10 +47,6 @@ struct S3Object {
     blob: String, // base64-encoded content
     name: String,
     mime_type: String,
-}
-
-pub fn s3_config(cfg: &mut ServiceConfig) {
-    cfg.service(scope("/s3").service(list_objects));
 }
 
 #[get("/list_objects")]
