@@ -21,7 +21,7 @@ fn create_request(
     new_ip: Cow<str>,
     nc_api_key: Cow<str>,
 ) -> Vec<(String, String)> {
-    let params  = vec![
+    let mut params: Vec<(String, String)> = vec![
         ("apiUser", "elijahobara"),
         ("apiKey", &nc_api_key),
         ("ClientIp", &server_ip),
@@ -34,5 +34,12 @@ fn create_request(
     .map(|(k, v)| (k.to_string(), v.to_string()))
     .collect();
 
-    return params;
+    vec![("@", &server_ip), ("www", &server_ip), ("vpn", &new_ip)]
+        .into_iter()
+        .enumerate()
+        .for_each(|(i, (sub_domain, ip))| {
+            params.append(&mut record(i + 1, sub_domain.into(), ip.clone()));
+        });
+
+    params
 }
