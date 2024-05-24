@@ -1,12 +1,26 @@
 use actix_identity::{Identity, IdentityExt};
-use actix_web::{body::MessageBody, dev::{ServiceRequest, ServiceResponse}, get, http::StatusCode, post, web::ServiceConfig, Error, HttpResponse, HttpResponseBuilder, Responder};
+use actix_web::{
+    body::MessageBody,
+    dev::{ServiceRequest, ServiceResponse},
+    get,
+    http::StatusCode,
+    post,
+    web::{Json, ServiceConfig},
+    Error, HttpMessage, HttpRequest, HttpResponse, HttpResponseBuilder, Responder,
+};
 use actix_web_lab::middleware::Next;
 use serde::{Deserialize, Serialize};
 
 use crate::errors::{Result, ServerError};
 
 pub fn auth_config(cfg: &mut ServiceConfig) {
-    cfg.service(user).service(logout);
+    cfg.service(user).service(login).service(logout);
+}
+
+#[derive(Deserialize, Debug)]
+pub struct LoginRequest {
+    username: String,
+    password: String,
 }
 
 #[derive(Serialize, Debug)]
@@ -19,6 +33,18 @@ pub async fn user(id: Option<Identity>) -> Result<HttpResponse> {
             code: StatusCode::UNAUTHORIZED,
             message: "Not logged in".to_string(),
         })
+}
+
+#[post("/login")]
+pub async fn login(req: HttpRequest, login_details: Json<LoginRequest>) -> Result<HttpResponse> {
+    Identity::login(&req.extensions(), login_details.username.clone()).map_err(|e| {
+        ServerError::Login {
+            code: StatusCode::INTERNAL_SERVER_ERROR,
+            message: format!("Failed to save session: {}", e),
+        }
+    })?;
+
+    Ok(HttpResponse::Ok().body("Logged in"))
 }
 
 #[post("/logout")]

@@ -1,17 +1,17 @@
-use actix_web::{middleware::Logger, web::Data, App, HttpServer};
 use actix_identity::IdentityMiddleware;
+use actix_web::{middleware::Logger, web::Data, App, HttpServer};
+use auth::auth_config;
 use aws_credential_types::Credentials;
 use aws_sdk_s3::config::{timeout::TimeoutConfig, Builder as S3Builder, Region};
 use env_logger::Env;
 use index::index_config;
 use s3::s3_config;
-use auth::auth_config;
 
+mod auth;
 mod common;
 mod errors;
 mod index;
 mod s3;
-mod auth;
 
 const SECRETS_JSON: &str = include_str!("../secrets.json");
 
