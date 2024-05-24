@@ -1,5 +1,5 @@
-use std::borrow::Cow;
 use actix_web::{post, web, HttpResponse, Responder};
+use std::borrow::Cow;
 
 use crate::common::Config;
 
@@ -58,7 +58,7 @@ pub async fn update_ip(
     }
 
     let params = create_request(
-        Cow::from(&config.server_ip), 
+        Cow::from(&config.server_ip),
         Cow::from(&req.ip),
         Cow::from(&config.nc_api_key),
     );

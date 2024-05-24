@@ -5,14 +5,15 @@ use aws_credential_types::Credentials;
 use aws_sdk_s3::config::{timeout::TimeoutConfig, Builder as S3Builder, Region};
 use env_logger::Env;
 use index::index_config;
+use ip::update_ip;
 use s3::s3_config;
 
 mod auth;
 mod common;
 mod errors;
 mod index;
-mod s3;
 mod ip;
+mod s3;
 
 const SECRETS_JSON: &str = include_str!("../secrets.json");
 
@@ -67,6 +68,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .app_data(Data::new(s3_client.clone()))
             .configure(s3_config)
+            .service(update_ip)
             .configure(index_config)
             .configure(auth_config)
     })
