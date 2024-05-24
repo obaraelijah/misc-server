@@ -1,4 +1,5 @@
 use actix_web::{middleware::Logger, web::Data, App, HttpServer};
+use actix_identity::IdentityMiddleware;
 use aws_credential_types::Credentials;
 use aws_sdk_s3::config::{timeout::TimeoutConfig, Builder as S3Builder, Region};
 use env_logger::Env;
@@ -61,8 +62,9 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            .app_data(Data::new(s3_client.clone()))
+            .wrap(IdentityMiddleware::default())
             .wrap(Logger::default())
+            .app_data(Data::new(s3_client.clone()))
             .configure(s3_config)
             .configure(index_config)
             .configure(auth_config)
