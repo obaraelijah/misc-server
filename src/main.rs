@@ -12,6 +12,7 @@ mod common;
 mod errors;
 mod index;
 mod s3;
+mod ip;
 
 const SECRETS_JSON: &str = include_str!("../secrets.json");
 
