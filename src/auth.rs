@@ -26,6 +26,11 @@ pub struct LoginRequest {
 #[derive(Serialize, Debug)]
 pub struct User(String);
 
+pub async fn create_ldap_conn(url: &str) -> Result<()> {
+    // TODO: Connection server
+    Ok(())
+}
+
 #[get("/user")]
 pub async fn user(id: Option<Identity>) -> Result<HttpResponse> {
     id.map(|u| HttpResponseBuilder::new(StatusCode::OK).json(User(u.id().unwrap())))
@@ -37,6 +42,8 @@ pub async fn user(id: Option<Identity>) -> Result<HttpResponse> {
 
 #[post("/login")]
 pub async fn login(req: HttpRequest, login_details: Json<LoginRequest>) -> Result<HttpResponse> {
+    let ldap = create_ldap_conn("url").await?;
+
     Identity::login(&req.extensions(), login_details.username.clone()).map_err(|e| {
         ServerError::Login {
             code: StatusCode::INTERNAL_SERVER_ERROR,
