@@ -17,3 +17,4 @@ aws-sdk-s3 = "0.28.0"
 aws-credential-types = { version = "0.55.0", features = ["hardcoded-credentials"] }
 thiserror = "1.0.47"
 base64 = "0.21.2"
+ldap3 = "0.11.3"

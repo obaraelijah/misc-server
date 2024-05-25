@@ -1,0 +1,17 @@
+version: "3"
+
+volumes:
+  lldap_data:
+    driver: local
+
+services:
+  lldap:
+    image: nitnelave/lldap:stable
+    ports:
+      # For LDAP
+      - "3890:3890"
+      - "17170:17170"
+    volumes:
+      - "lldap_data:/data"
+    environment:
+      
