@@ -10,6 +10,7 @@ use actix_web::{
 };
 use actix_web_lab::middleware::Next;
 use serde::{Deserialize, Serialize};
+use ldap3::{Ldap, LdapConnAsync};
 
 use crate::errors::{Result, ServerError};
 
@@ -26,9 +27,16 @@ pub struct LoginRequest {
 #[derive(Serialize, Debug)]
 pub struct User(String);
 
-pub async fn create_ldap_conn(url: &str) -> Result<()> {
+pub async fn create_ldap_conn(url: &str) -> Result<(LdapConnAsync, Ldap)> {
     // TODO: Connection server
-    Ok(())
+    let (con, ldap) = LdapConnAsync::new(url)
+        .await
+        .map_err(|e| ServerError::Login {
+            code: StatusCode::INTERNAL_SERVER_ERROR,
+            message: format!("Failed to connect to LDAP server: {}", e),
+        })?;
+
+    Ok((con, ldap))
 }
 
 #[get("/user")]
@@ -42,8 +50,10 @@ pub async fn user(id: Option<Identity>) -> Result<HttpResponse> {
 
 #[post("/login")]
 pub async fn login(req: HttpRequest, login_details: Json<LoginRequest>) -> Result<HttpResponse> {
-    let ldap = create_ldap_conn("url").await?;
+    let (con, mut ldap) = create_ldap_conn("ldap://localhost:3890").await?;
 
+    ldap3::drive!(con);
+    
     Identity::login(&req.extensions(), login_details.username.clone()).map_err(|e| {
         ServerError::Login {
             code: StatusCode::INTERNAL_SERVER_ERROR,
