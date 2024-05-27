@@ -78,14 +78,17 @@ async fn main() -> std::io::Result<()> {
             .await
             .expect("Failed to get the IP from request bodY");
     }
+    info!("Got server IP: {}", &server_ip);
 
     let config = Config {
         nc_api_key: secrets.nc_api_key.clone(),
         server_ip,
         bucket_name: "unraid-remote-sync".into(),
     };
+    debug!("Config: {}, {}", &config.server_ip, &config.bucket_name);
 
     let s3_client = create_s3_client(&secrets).await;
+    info!("Created S3 client");
 
     info!("Starting server");
     HttpServer::new(move || {
