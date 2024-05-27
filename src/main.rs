@@ -11,6 +11,7 @@ use actix_web::{middleware::Logger, web::Data, App, HttpServer};
 use auth::auth_config;
 use aws_credential_types::Credentials;
 use aws_sdk_s3::config::{timeout::TimeoutConfig, Builder as S3Builder, Region};
+use common::Config;
 use env_logger::Env;
 use index::index_config;
 use ip::update_ip;
@@ -19,8 +20,10 @@ use log::{debug, info};
 
 const SECRETS_JSON: &str = include_str!("../secrets.json");
 
-#[derive(Debug, Clone, serde::Deserialize)]
+#[derive(serde::Deserialize, Debug, Clone)]
 struct Secrets {
+    #[serde(rename = "NAME_CHEAP_API_KEY")]
+    nc_api_key: String,
     #[serde(rename = "ENC_KEY")]
     key: String,
     #[serde(rename = "AWS_ACCESS_KEY")]
@@ -64,6 +67,23 @@ async fn main() -> std::io::Result<()> {
     let secrets: Secrets =
         serde_json::from_str(SECRETS_JSON).expect("Failed to parse the secrets json");
     info!("Got secrets");
+
+    let mut server_ip = std::fs::read_to_string("/tmp/current_ip.txt").unwrap_or("".to_string());
+
+    if server_ip == "" {
+        server_ip = reqwest::get("https://api.ipify.org")
+            .await
+            .expect("Failed to create request to get the server IP")
+            .text()
+            .await
+            .expect("Failed to get the IP from request bodY");
+    }
+
+    let config = Config {
+        nc_api_key: secrets.nc_api_key.clone(),
+        server_ip,
+        bucket_name: "unraid-remote-sync".into(),
+    };
 
     let s3_client = create_s3_client(&secrets).await;
 
