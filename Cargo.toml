@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 actix-identity = "0.5.2"
 actix-web = "4.3.1"
+actix-session = { version = "0.7.2", features = ["cookie-session"] }
 actix-web-lab = "0.19.1"
 env_logger = "0.10.0"
 log = "0.4.20"
@@ -18,3 +19,4 @@ aws-credential-types = { version = "0.55.0", features = ["hardcoded-credentials"
 thiserror = "1.0.47"
 base64 = "0.21.2"
 ldap3 = "0.11.3"
+actix-cors = "0.6.4"

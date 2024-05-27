@@ -7,7 +7,8 @@ mod ip;
 mod s3;
 
 use actix_identity::IdentityMiddleware;
-use actix_web::{middleware::Logger, web::Data, App, HttpServer};
+use actix_session::{storage::CookieSessionStore, SessionMiddleware};
+use actix_web::{cookie::Key, middleware::Logger, web::Data, App, HttpServer};
 use auth::auth_config;
 use aws_credential_types::Credentials;
 use aws_sdk_s3::config::{timeout::TimeoutConfig, Builder as S3Builder, Region};
@@ -92,8 +93,15 @@ async fn main() -> std::io::Result<()> {
 
     info!("Starting server");
     HttpServer::new(move || {
+        let  key = Key::from(secrets.key.as_bytes());
+
         App::new()
             .wrap(IdentityMiddleware::default())
+            .wrap(
+                SessionMiddleware::builder(CookieSessionStore::default(), key)
+                    .cookie_secure(true)
+                    .build(),
+            )
             .wrap(Logger::default())
             .app_data(Data::new(s3_client.clone()))
             .configure(s3_config)
