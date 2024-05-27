@@ -5,18 +5,19 @@ edition = "2021"
 
 [dependencies]
 actix-identity = "0.5.2"
-actix-web = "4.3.1"
 actix-session = { version = "0.7.2", features = ["cookie-session"] }
-actix-web-lab = "0.19.1"
+actix-web = "4.3.1"
 actix-cors = "0.6.4"
 env_logger = "0.10.0"
-log = "0.4.20"
 reqwest = { version = "0.11.18", features = ["native-tls-vendored"] }
 serde = { version = "1.0.178", features = ["derive"] }
 serde_json = "1.0.104"
+futures = "0.3.1"
+actix-web-lab = "0.19.1"
 aws-config = "0.55.0"
 aws-sdk-s3 = "0.28.0"
 aws-credential-types = { version = "0.55.0", features = ["hardcoded-credentials"] }
+log = "0.4.20"
 thiserror = "1.0.47"
 base64 = "0.21.2"
 ldap3 = "0.11.3"
