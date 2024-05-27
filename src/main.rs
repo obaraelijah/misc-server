@@ -17,8 +17,8 @@ use common::Config;
 use env_logger::Env;
 use index::index_config;
 use ip::update_ip;
-use s3::s3_config;
 use log::{debug, info};
+use s3::s3_config;
 
 const SECRETS_JSON: &str = include_str!("../secrets.json");
 
@@ -94,7 +94,7 @@ async fn main() -> std::io::Result<()> {
 
     info!("Starting server");
     HttpServer::new(move || {
-        let  key = Key::from(secrets.key.as_bytes());
+        let key = Key::from(secrets.key.as_bytes());
 
         let cors = if cfg!(debug_assertions) {
             debug!("Permissive CORS");
