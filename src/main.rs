@@ -7,6 +7,7 @@ mod ip;
 mod s3;
 
 use actix_cors::Cors;
+
 use actix_identity::IdentityMiddleware;
 use actix_session::{storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{cookie::Key, http, middleware::Logger, web::Data, App, HttpServer};
@@ -46,12 +47,14 @@ impl Secrets {
 
 async fn create_s3_client(provider: &Secrets) -> aws_sdk_s3::Client {
     let config = aws_config::from_env()
-        .region(Region::new("af-south-1"))
+        .region(Region::new("us-east-1"))
         .credentials_provider(provider.aws_creds())
         .load()
         .await;
 
-    let timeout_config = TimeoutConfig::builder().build();
+    let timeout_config = TimeoutConfig::builder()
+        // .connect_timeout(Duration::from_secs(7))
+        .build();
 
     let s3_config = S3Builder::from(&config)
         .timeout_config(timeout_config)
@@ -71,7 +74,7 @@ async fn main() -> std::io::Result<()> {
     info!("Got secrets");
 
     let mut server_ip = std::fs::read_to_string("/tmp/current_ip.txt").unwrap_or("".to_string());
-
+    // TODO: cache the results. This causes the largest delay in the startup
     if server_ip == "" {
         server_ip = reqwest::get("https://api.ipify.org")
             .await
@@ -79,7 +82,7 @@ async fn main() -> std::io::Result<()> {
             .text()
             .await
             .expect("Failed to get the IP from request bodY");
-    }
+    };
     info!("Got server IP: {}", &server_ip);
 
     let config = Config {
