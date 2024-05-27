@@ -1,4 +1,8 @@
-use crate::errors::{Result, ServerError};
+use crate::{
+    auth::create_ldap_conn,
+    errors::{Result, ServerError},
+};
+
 use actix_web::{
     get,
     web::{Data, ServiceConfig},
@@ -24,6 +28,10 @@ async fn health(s3_client: Option<Data<S3Client>>) -> Result<HttpResponse> {
     } else {
         issues.push("s3 client is not initialized".to_string());
     };
+
+    if let Err(e) = create_ldap_conn("ldap://localhost:3890").await {
+        issues.push(format!("Failed to connect to LDAP server: {}", e));
+    }
 
     if issues.is_empty() {
         Ok(HttpResponse::Ok().body("OK"))
