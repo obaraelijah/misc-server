@@ -123,6 +123,7 @@ async fn main() -> std::io::Result<()> {
                     .build(),
             )
             .wrap(Logger::default())
+            .app_data(Data::new(config.clone()))
             .app_data(Data::new(s3_client.clone()))
             .configure(s3_config)
             .service(update_ip)
