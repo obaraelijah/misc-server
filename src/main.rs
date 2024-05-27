@@ -9,7 +9,7 @@ mod s3;
 use actix_cors::Cors;
 use actix_identity::IdentityMiddleware;
 use actix_session::{storage::CookieSessionStore, SessionMiddleware};
-use actix_web::{cookie::Key, middleware::Logger, web::Data, App, HttpServer};
+use actix_web::{cookie::Key, http, middleware::Logger, web::Data, App, HttpServer};
 use auth::auth_config;
 use aws_credential_types::Credentials;
 use aws_sdk_s3::config::{timeout::TimeoutConfig, Builder as S3Builder, Region};
@@ -96,15 +96,26 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let  key = Key::from(secrets.key.as_bytes());
 
+        let cors = if cfg!(debug_assertions) {
+            debug!("Permissive CORS");
+            Cors::permissive()
+        } else {
+            debug!("Strict CORS");
+            Cors::default()
+                .allowed_origin_fn(|origin, _req_head| {
+                    origin.as_bytes().ends_with(b"elijahobara.com")
+                })
+                .allowed_methods(vec!["GET", "POST"])
+                .allowed_headers(vec![
+                    http::header::AUTHORIZATION,
+                    http::header::ACCEPT,
+                    http::header::CONTENT_TYPE,
+                ])
+                .supports_credentials()
+        };
+
         App::new()
-            .wrap(
-                Cors::default()
-                    .allowed_origin("http://localhost:3000")
-                    .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
-                    .allowed_headers(vec![actix_web::http::header::AUTHORIZATION, actix_web::http::header::ACCEPT])
-                    .allowed_header(actix_web::http::header::CONTENT_TYPE)
-                    .max_age(3600)
-            )
+            .wrap(cors)
             .wrap(IdentityMiddleware::default())
             .wrap(
                 SessionMiddleware::builder(CookieSessionStore::default(), key)
