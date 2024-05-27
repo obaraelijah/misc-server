@@ -14,4 +14,6 @@ services:
     volumes:
       - "lldap_data:/data"
     environment:
-      
+      - LLDAP_JWT_SECRET=u7PaTT5LgtMC6fvh9nkEpOh7Jl8rLcsw
+      - LLDAP_LDAP_USER_PASS=admin123
+      - LLDAP_LDAP_BASE_DN=dc=obaraelijah,dc=com
