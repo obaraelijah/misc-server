@@ -6,6 +6,7 @@ mod index;
 mod ip;
 mod s3;
 
+use actix_cors::Cors;
 use actix_identity::IdentityMiddleware;
 use actix_session::{storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{cookie::Key, middleware::Logger, web::Data, App, HttpServer};
@@ -96,6 +97,14 @@ async fn main() -> std::io::Result<()> {
         let  key = Key::from(secrets.key.as_bytes());
 
         App::new()
+            .wrap(
+                Cors::default()
+                    .allowed_origin("http://localhost:3000")
+                    .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
+                    .allowed_headers(vec![actix_web::http::header::AUTHORIZATION, actix_web::http::header::ACCEPT])
+                    .allowed_header(actix_web::http::header::CONTENT_TYPE)
+                    .max_age(3600)
+            )
             .wrap(IdentityMiddleware::default())
             .wrap(
                 SessionMiddleware::builder(CookieSessionStore::default(), key)
