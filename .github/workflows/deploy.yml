@@ -1,0 +1,38 @@
+name: Deploy to server
+on:
+  push:
+    paths-ignore:
+      - '.gitignore'
+    branches:
+      - 'main'
+  workflow_dispatch: {}
+jobs:
+  build_and_deploy:
+    runs-on: ['self-hosted']
+    if: |
+      ${{ (contains(github.event.head_commit.modified, 'Cargo.*')
+      && contains(github.event.head_commit.modified, 'src/**'))
+      || contains(github.event.head_commit.modified, '.github/workflows/deploy.yml') }}
+    environment: api-server
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Rust environment
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+
+    - name: Add secrets.json
+      env:
+        SECRETS_JSON: ${{ secrets.SERVER_SECRETS }}
+      run: echo "$SECRETS_JSON" > secrets.json
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo
