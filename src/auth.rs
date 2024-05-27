@@ -50,10 +50,33 @@ pub async fn user(id: Option<Identity>) -> Result<HttpResponse> {
 
 #[post("/login")]
 pub async fn login(req: HttpRequest, login_details: Json<LoginRequest>) -> Result<HttpResponse> {
+    // Create LDAP connection
     let (con, mut ldap) = create_ldap_conn("ldap://localhost:3890").await?;
 
     ldap3::drive!(con);
+
+    // LDAP bind
+    let bind_result = ldap.simple_bind(
+        &format!(
+            "uid={},ou=people,dc=obaraelijah,dc=com",
+            login_details.username
+        ),
+        &login_details.password,
+    ).await.map_err(|e| ServerError::Login {
+        code: StatusCode::INTERNAL_SERVER_ERROR,
+        message: e.to_string(),
+    })?;
+
+    // check if bind was successful
+    if bind_result.rc != 0 {
+        return Err(ServerError::Login {
+            // TODO: get better status codes
+            code: StatusCode::UNAUTHORIZED,
+            message: format!("Failed to login. Bind returned non-zero: {}", bind_result.rc),
+        });
+    }
     
+    // save session
     Identity::login(&req.extensions(), login_details.username.clone()).map_err(|e| {
         ServerError::Login {
             code: StatusCode::INTERNAL_SERVER_ERROR,
